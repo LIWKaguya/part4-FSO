@@ -39,6 +39,13 @@ const testingBlogs = [
     }  
 ]
 
+const updatingBlog = {
+  title: "React patterns",
+  author: "Michael Chan",
+  url: "https://reactpatterns.com/",
+  likes: 23189
+}
+
 const validBlog = {
     title : "Matsuri",
     author: "KuroKousuii",
@@ -85,5 +92,5 @@ const nonExistingId = async () => {
 module.exports = {
     testingBlogs, blogsInDb, nonExistingId,
     validBlog, missingLikesBlog, missingTitleBlog,
-    missingUrlBlog
+    missingUrlBlog, updatingBlog
 }
