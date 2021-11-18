@@ -1,5 +1,6 @@
 const Blog = require('../models/blog')
 const User = require('../models/user')
+const bcrypt = require('bcryptjs')
 
 const testingBlogs = [
     {
@@ -48,10 +49,10 @@ const updatingBlog = {
 }
 
 const validBlog = {
-    title : "Matsuri",
-    author: "KuroKousuii",
-    url: "www.matsuri.com",
-    likes: 213
+  title : "Matsuri",
+  author: "KuroKousuii",
+  url: "www.matsuri.com",
+  likes: 213
 }
 
 const missingLikesBlog = {
@@ -95,9 +96,43 @@ const nonExistingId = async () => {
     return blog._id.toString()
 }
 
+const initialUsers = [
+  {
+    username: "username1",
+    name: "name1",
+    password: "password1"
+  },
+  {
+    username: "username2",
+    name: "name2",
+    password: "password2"
+  },
+  {
+    username: "username3",
+    name: "name3",
+    password: "password3"
+  },
+]
+
+const mixingHash = (users) => {
+  const saltRounds = 10
+  users = JSON.parse(JSON.stringify(users))
+  const mixedUsers = users.map(user => {
+    const passwordHash = bcrypt.hashSync(user.password, saltRounds)
+    user.passwordHash = passwordHash;
+
+    delete user.password
+
+    return user 
+  })
+  return mixedUsers
+}
+
+const hashedUsers = mixingHash(initialUsers)
+
 module.exports = {
     testingBlogs, blogsInDb, nonExistingId,
     validBlog, missingLikesBlog, missingTitleBlog,
     missingUrlBlog, updatingBlog,
-    usersInDb
+    usersInDb, hashedUsers
 }
