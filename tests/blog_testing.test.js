@@ -41,15 +41,23 @@ beforeEach(async () => {
     await Promise.all(promiseArray)
 })
 
-test('get method returned as json and same length', async () => {
-    const response = await api.get('/api/blogs')
-    .expect(200).expect('Content-Type', /application\/json/)
-    expect(response.body.length).toBe(helper.testingBlogs.length)
-})
+describe('get method', () => {
+    test('get method returned as json and same length', async () => {
+        const response = await api.get('/api/blogs')
+        .expect(200).expect('Content-Type', /application\/json/)
+        expect(response.body.length).toBe(helper.testingBlogs.length)
+    })
 
-test('there is id property', async () => {
-    const response = await api.get('/api/blogs').expect(200).expect('Content-Type', /application\/json/)
-    expect(response.body[0].id).toBeDefined()
+    test('returned 400 if invalid id', async () => {
+        const invalidId = 'djasdjasdjasdjasd'
+        await api.get(`/api/blogs/${invalidId}`).expect(400)
+    })
+
+    test('there is id property', async () => {
+        const response = await api.get('/api/blogs').expect(200).expect('Content-Type', /application\/json/)
+        expect(response.body[0].id).toBeDefined()
+    })
+    
 })
 
 test('post method saved correctly and increase the length', async () => {
@@ -68,15 +76,16 @@ test('unique username only', async () => {
         name : "name1",
         password : "password1"
     }
-    const response = await api.post('/api/users').set('Content-Type', 'application/json')
+     await api.post('/api/users').set('Content-Type', 'application/json')
     .send(replicateUser).expect(400)
 })
 
-// test('likes in default is 0', async () => {
-//     const response = await api.post('/api/blogs').set('Content-Type', 'application/json')
-//     .send(helper.missingLikesBlog).expect(200)
-//     expect(response.body.likes).toBe(0)
-// })
+test('likes in default is 0', async () => {
+    const response = await api.post('/api/blogs').set('Content-Type', 'application/json')
+    .set('Authorization', storage.usedToken)
+    .send(helper.missingLikesBlog).expect(200)
+    expect(response.body.likes).toBe(0)
+})
 
 test('deleting return 204 and not containing the title', async () => {
     const blogsAtStart = await helper.blogsInDb()
@@ -90,29 +99,29 @@ test('deleting return 204 and not containing the title', async () => {
     expect(titles).not.toContain(deletingBlog.title)
 })
 
-// test('updating a blog', async () => {
-//     const blogsAtStart = await helper.blogsInDb()
-//     const updatingBlog = blogsAtStart[0]
+test('updating a blog', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+    const updatingBlog = blogsAtStart[0]
 
-//     await api.put(`/api/blogs/${updatingBlog.id}`).set('Content-Type', 'application/json')
-//     .send(helper.updatingBlog).expect(200)
-//     const blogsAtEnd = await helper.blogsInDb() 
-//     expect(blogsAtEnd.length).toBe(helper.testingBlogs.length)
-//     const likes = blogsAtEnd.map(blog => blog.likes)
-//     expect(likes).toContain(23189)
-// })
-
-// test('invalid if missing url or title', async () => {
-//     await api.post('/api/blogs').set('Content-Type', 'application/json')
-//     .send(helper.missingTitleBlog).expect(400)
-
-//     await api.post('/api/blogs').set('Content-Type', 'application/json')
-//     .send(helper.missingUrlBlog).expect(400)
-// })
-
-describe('Token Authentication part', () => {
-    
+    await api.put(`/api/blogs/${updatingBlog.id}`).set('Content-Type', 'application/json')
+    .set('Authorization', storage.usedToken)
+    .send(helper.updatingBlog).expect(200)
+    const blogsAtEnd = await helper.blogsInDb() 
+    expect(blogsAtEnd.length).toBe(helper.testingBlogs.length)
+    const likes = blogsAtEnd.map(blog => blog.likes)
+    expect(likes).toContain(23189)
 })
+
+test('invalid if missing url or title', async () => {
+    await api.post('/api/blogs').set('Content-Type', 'application/json')
+    .set('Authorization', storage.usedToken)
+    .send(helper.missingTitleBlog).expect(400)
+
+    await api.post('/api/blogs').set('Content-Type', 'application/json')
+    .set('Authorization', storage.usedToken)
+    .send(helper.missingUrlBlog).expect(400)
+})
+
 
 afterAll(() => {
     mongoose.connection.close()
