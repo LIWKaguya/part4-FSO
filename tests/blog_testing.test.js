@@ -81,7 +81,9 @@ test('unique username only', async () => {
 test('deleting return 204 and not containing the title', async () => {
     const blogsAtStart = await helper.blogsInDb()
     const deletingBlog = blogsAtStart[0]
-    await api.delete(`/api/blogs/${deletingBlog.id}`).expect(204)
+    await api.delete(`/api/blogs/${deletingBlog.id}`)
+    .set('Authorization', storage.usedToken)
+    .expect(204)
     const blogsAtEnd = await helper.blogsInDb()
     expect(blogsAtEnd.length).toBe(helper.testingBlogs.length-1)
     const titles = blogsAtEnd.map(blog => blog.title)
