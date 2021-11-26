@@ -1,6 +1,5 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
-const jwt = require('jsonwebtoken')
 const middleware = require('../utils/middleware')
 
 blogsRouter.get('/', async (request, response) => {
@@ -10,7 +9,7 @@ blogsRouter.get('/', async (request, response) => {
 })
 
 blogsRouter.get('/:id', async (request, response) => {
-  const blog = await Blog.findById(request.params.id)
+  const blog = await Blog.findById(request.params.id).populate('user', {username: 1, name: 1})
     if (blog) {
       response.status(200).json(blog.toJSON())
     } else {
@@ -19,14 +18,14 @@ blogsRouter.get('/:id', async (request, response) => {
 })
 
 blogsRouter.post('/', middleware.userExtractor, async (request, response) => {
-  const {body, user} = request
+  const {body, user}  = request
 
   const blog = new Blog({
     title: body.title,
     author: body.author || "Anonymous",
     url: body.url,
     likes: body.likes || 0,
-    user: user._id
+    user: user
   })
 
   const savedBlog = await blog.save()
@@ -36,15 +35,15 @@ blogsRouter.post('/', middleware.userExtractor, async (request, response) => {
 })
 
 blogsRouter.delete('/:id', middleware.userExtractor, async (request, response) => {
-  const {user} = request
-  const blog = await Blog.findById(request.params.id)
-  if(blog.user.toString() === user.id) {
-    await blog.remove()
-    return response.status(204).end()
-  }
-  return response.status(403).json({
-    error: "user is not allowed"
-  })
+    const {user} = request 
+    const blog = await Blog.findById(request.params.id)
+    if(blog.user.toString() === user.id) {
+      await blog.remove()
+      return response.status(204).end()
+    }
+    return response.status(403).json({
+      error: "user is not allowed"
+    })
 })
 
 blogsRouter.put('/:id', async (request, response) => {
@@ -53,9 +52,9 @@ blogsRouter.put('/:id', async (request, response) => {
     title: body.title,
     author: body.author || "Anonymous",
     url: body.url,
-    likes: body.likes || 0,
+    likes: body.likes || 0
   }
-  const updatedBlog = await Blog.findByIdAndUpdate(request.params.id, blog, {new: true})
+  const updatedBlog = await Blog.findByIdAndUpdate(request.params.id, blog, {new: true}).populate('user', {username: 1, name: 1})
   response.status(200).json(updatedBlog.toJSON())
 })
 
